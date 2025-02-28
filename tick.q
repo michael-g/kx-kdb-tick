@@ -20,11 +20,7 @@
 "kdb+tick 2.8 2014.03.12"
 
 /q tick.q SRC [DST] [-p 5010] [-o h]
-system"l tick/",(src:first .z.x,enlist"sym"),".q"
 
-if[not system"p";system"p 5010"]
-
-\l tick/u.q
 \d .u
 ld:{if[not type key L::`$(-10_string L),string x;.[L;();:;()]];i::j::-11!(-2;L);if[0<=type i;-2 (string L)," is a corrupt log. Truncate to length ",(string last i)," and restart";exit 1];hopen L};
 tick:{init[];if[not min(`time`sym~2#key flip value@)each t;'`timesym];@[;`sym;`g#]each t;d::.z.D;if[l::count y;L::`$":",y,"/",x,10#".";l::ld d]};
@@ -45,7 +41,20 @@ if[not system"t";system"t 1000";
  f:key flip value t;pub[t;$[0>type first x;enlist f!x;flip f!x]];if[l;l enlist (`upd;t;x);i+:1];}];
 
 \d .
-.u.tick[src;.z.x 1];
+
+// Now looks for arguments -sym and -dst; the former contains the global table
+// definitions and -dst, if supplied, is the directory in which the journal 
+// will be written. The argument to -sym is required to be the name of a file
+// in the same directory as .z.f; thus if this is called by test/test_tp.q, then
+// the table-def file should also reside in test/
+.mg.init:{
+  opt:.Q.opt .z.x
+ ;dir:1_ string first` vs hsym .z.f
+ ;system"l ",first system"readlink -f ",dir,"/",(first opt`sym),".q"
+ ;.u.tick . first each opt`sym`dst
+ }
+
+.mg.init[];
 
 \
  globals used
